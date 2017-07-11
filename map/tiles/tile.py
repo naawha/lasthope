@@ -25,10 +25,10 @@ class Tile(object):
             for i in image:
                 screen.blit(i, (
                     chunk_x * TILE_SIZE + x * TILE_SIZE - camera_x,
-                    chunk_y * TILE_SIZE + y * TILE_SIZE - camera_y)
-                            )
+                    chunk_y * TILE_SIZE + y * TILE_SIZE - camera_y
+                ))
         else:
             screen.blit(image, (
                 chunk_x * TILE_SIZE + x * TILE_SIZE - camera_x,
-                chunk_y * TILE_SIZE + y * TILE_SIZE - camera_y)
-            )
+                chunk_y * TILE_SIZE + y * TILE_SIZE - camera_y
+            ))

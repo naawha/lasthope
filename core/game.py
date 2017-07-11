@@ -19,7 +19,6 @@ class Game(object):
         self.done = False
         self.menu_scene = MenuScene(self.screen, self)
         self.scene = None
-        self.current_save
 
         self.save = None
 
@@ -61,12 +60,18 @@ class Game(object):
         table = save.table('game')
         table.insert({
             'seed': randint(100000000, 9999999999),
+            'name': current_datetime
         })
         self.load_game(current_datetime)
 
     def save_game(self):
         if isinstance(self.scene, MapScene):
             player = self.scene.player
+            self.save.purge_table('player')
+            table = self.save.table('player')
+            table.insert(player.serialize())
+            table = self.save.table('game')
+            copyfile('save/.current.sav', 'save/%s.sav' % table.all()[0]['name'])
 
     def load_character(self, save):
         table = save.table('player')
@@ -83,12 +88,13 @@ class Game(object):
     def load_map(self, save, player):
         table = save.table('game')
         world = table.all()[0]
-        return Map(self.screen, player.x, player.y, **world)
+        world.pop('name')
+        return Map(self.screen, self, player.x, player.y, **world)
 
     def load_game(self, savename):
         copyfile('save/%s.sav' % savename, 'save/.current.sav')
         save = TinyDB('save/.current.sav')
-
+        self.save = save
         player = self.load_player(save)
         map = self.load_map(save, player)
         self.scene = MapScene(self, self.screen, player, map)

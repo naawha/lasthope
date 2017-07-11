@@ -5,7 +5,7 @@ from tinydb import Query
 
 from core.player import Player
 from map import Map
-from interface import MainMenu, NewGameInterface, LoadGameInterface
+from interface import MainMenu, PauseMenu, NewGameInterface, LoadGameInterface
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH, CAMERA_OFFSET
 
 
@@ -95,6 +95,7 @@ class MapScene(AbstractScene):
         super(MapScene, self).__init__(screen, game)
         self.player = player
         self.map = map
+        self.game_menu = None
 
         self.x = self.y = None
         self.center_camera()
@@ -102,6 +103,18 @@ class MapScene(AbstractScene):
     def center_camera(self):
         self.x = self.player.x - SCREEN_WIDTH/2
         self.y = self.player.y - SCREEN_HEIGHT/2
+
+    def open_menu(self):
+        self.game_menu = PauseMenu([
+            ('continue', u'Продолжить'),
+            ('save', u'Сохранить'),
+            ('settings', u'Настройки'),
+            ('main_menu', u'В меню'),
+            ('exit', u'Выйти')
+        ], self.screen)
+
+    def close_menu(self):
+        self.game_menu = None
 
     @staticmethod
     def decide_move_direction(pressed):
@@ -119,11 +132,35 @@ class MapScene(AbstractScene):
         direction = [key for key, value in move_keys.items() if value]
         return direction, run
 
+    def pause_menu_event(self, event):
+        if event == 'continue':
+            self.close_menu()
+        if event == 'save':
+            self.game.save_game()
+            self.close_menu()
+        if event == 'settings':
+            self.close_menu()
+        if event == 'main_menu':
+            self.game.back_to_menu()
+        if event == 'exit':
+            self.game.end()
+
     def process_input(self, pressed, events):
-        # if pressed[pygame.K_F4]:
-        #     self.save_game()
-        direction, run = self.decide_move_direction(pressed)
-        self.move_player(direction, run)
+        if self.game_menu:
+            for event in events:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.close_menu()
+                    return
+                selected = self.game_menu.process_event(event)
+                if selected:
+                    self.pause_menu_event(selected)
+        else:
+            for event in events:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.open_menu()
+                    return
+            direction, run = self.decide_move_direction(pressed)
+            self.move_player(direction, run)
 
     def move_player(self, direction, run):
         if not direction:
@@ -171,6 +208,7 @@ class MapScene(AbstractScene):
     def render(self):
         self.screen.fill((0, 0, 0))
         self.map.update(self.player.x, self.player.y)
-        self.map.render(self.x, self.y)
+        self.map.render(self.x, self.y, self.player)
 
-        self.player.draw(self.player.x-self.x, self.player.y-self.y)
+        if self.game_menu:
+            self.game_menu.render()

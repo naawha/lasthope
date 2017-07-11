@@ -1,13 +1,15 @@
 # -*- coding:utf-8 -*-
 from chunk import Chunk
+from tinydb import TinyDB, Query
 from settings import CHUNK_SIZE, TILE_SIZE
 
 CHUNK_PX_SIZE = CHUNK_SIZE * TILE_SIZE
 
 
 class Map(object):
-    def __init__(self, screen, x, y, seed):
+    def __init__(self, screen, game, x, y, seed):
         self.screen = screen
+        self.game = game
         self.seed = seed
         self.chunk_x, self.chunk_y = self.get_chunk_coords(x, y)
         self.chunks = self.get_chunks()
@@ -25,10 +27,49 @@ class Map(object):
                             chunks.append(chunk)
                             break
                     else:
-                      chunks.append(Chunk(x, y, self.seed))
+                        chunks.append(self.load_chunk(x, y))
                 else:
-                    chunks.append(Chunk(x, y, self.seed))
+                    chunks.append(self.load_chunk(x, y))
         return chunks
+
+    def insert_objects(self, object_list):
+        table = self.game.save.table('objects')
+        table.insert_multiple(object_list)
+
+    def has_chunk(self, x, y):
+        table = self.game.save.table('chunks')
+        q = Query()
+        return bool(table.search((q.x == x) & (q.y == y)))
+
+    def get_chunk_objects(self, x, y):
+        table = self.game.save.table('objects')
+        q = Query()
+        return table.search((q.chunk_x == x) & (q.chunk_y == y))
+
+    def insert_chunk(self, x, y):
+        table = self.game.save.table('chunks')
+        table.insert({
+            'x': x,
+            'y': y
+        })
+
+    def load_chunk(self, x, y):
+        if self.has_chunk(x, y):
+            objects = self.get_chunk_objects(x, y)
+        else:
+            self.insert_chunk(x, y)
+            objects = self.generate_objects(x, y)
+            self.insert_objects(objects)
+        return Chunk(x, y, self.seed, objects)
+
+    def generate_objects(self, x, y):
+        return [{
+            'type': 'tree',
+            'chunk_x': x,
+            'chunk_y': y,
+            'x': 300,
+            'y': 300
+        }]
 
     def update(self, x, y):
         chunk_x, chunk_y = self.get_chunk_coords(x, y)
@@ -37,9 +78,30 @@ class Map(object):
             self.chunk_y = chunk_y
             self.chunks = self.get_chunks()
 
-    def render(self, camera_x, camera_y):
-        for c in self.chunks:
-            c.render(self.screen, camera_x, camera_y)
+    def render(self, camera_x, camera_y, player):
+        for i in range(len(self.chunks)):
+            self.chunks[i].render_tiles(self.screen, camera_x, camera_y)
+
+        for i in range(len(self.chunks)):
+            if i == 4:
+                self.chunks[i].render_objects(self.screen, camera_x, camera_y, player)
+            else:
+                self.chunks[i].render_objects(self.screen, camera_x, camera_y)
+
+    def filter_movement_new(self, movement, player_x, player_y):
+        filtered_movement = [0, 0]
+        current_chunk = self.chunks[4]
+        player_chunk_x = player_x - current_chunk.x * CHUNK_PX_SIZE
+        player_chunk_y = player_y - current_chunk.y * CHUNK_PX_SIZE
+
+        tile_chunk_x = int(player_chunk_x/TILE_SIZE)*TILE_SIZE
+        tile_chunk_y = int(player_chunk_y/TILE_SIZE)*TILE_SIZE
+
+        # индексы тайла, на котором находится игрок, относительно чанка
+        tile_chunk_index_x = int(player_chunk_x/TILE_SIZE)
+        tile_chunk_index_y = int(player_chunk_y/TILE_SIZE)
+
+
 
     def filter_movement(self, movement, player_x, player_y):
         filtered_movement = [0, 0]
@@ -48,7 +110,6 @@ class Map(object):
         current_chunk = self.chunks[4]
         player_chunk_x = player_x - current_chunk.x * CHUNK_PX_SIZE
         player_chunk_y = player_y - current_chunk.y * CHUNK_PX_SIZE
-
 
         tile_chunk_x = int(player_chunk_x/TILE_SIZE)*TILE_SIZE
         tile_chunk_y = int(player_chunk_y/TILE_SIZE)*TILE_SIZE

@@ -112,15 +112,26 @@ class Player(object):
         if 'bottom' in self.direction:
             return 'bottom'
 
-    def draw(self, x, y):
+    def draw(self, camera_x, camera_y):
         dive_offset = PLAYER_MAX_DIVE*self.water_dive
 
         direction = self.get_image_direction()
         # self.map.update(int(self.x), int(self.y))
 
-        self.character.render((x, y), self.idle, direction, dive_offset)
+        self.character.render((self.x - camera_x, self.y - camera_y), self.idle, direction, dive_offset)
         if DEBUG:
             myfont = pygame.font.SysFont("monospace", 15)
             label = myfont.render('(%s:%s)' % (self.x, self.y), 1, (0, 0, 0))
             self.screen.blit(label, (x, y))
 
+    def serialize(self):
+        return {
+            'x': self.x,
+            'y': self.y,
+            'character': {
+                'skin': self.character.skin,
+                'sex': self.character.sex,
+                'hair_style': self.character.hair_style,
+                'hair_color': self.character.hair_color,
+            }
+        }

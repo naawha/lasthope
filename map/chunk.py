@@ -1,19 +1,22 @@
 import random
+import operator
 import pygame
 
 from tiles import GrassTile, SandTile, WaterTile, DeepWaterTile
 from settings import DEBUG, CHUNK_SIZE, TILE_SIZE
 from map_generator import generate_chunk_2
+from objects import Tree
 
 
 class Chunk(object):
-    def __init__(self, x, y, seed):
+    def __init__(self, x, y, seed, objects):
         self.x = x
         self.y = y
         self.seed = seed
         self.map = self.get_map()
         self.label = self.get_label()
         self.rect = self.get_absolute_rect()
+        self.objects = self.prepare_objects(objects)
 
     def get_map(self):
         return self.prepare_chunk(self.generate())
@@ -50,6 +53,15 @@ class Chunk(object):
                 Tile = self.get_tile_class(generated[y*CHUNK_SIZE+x])
                 map.append(Tile(box))
         return map
+
+    def prepare_objects(self, raw_objects):
+        objects = []
+        sorted_objects = sorted(raw_objects, key=operator.itemgetter('y', 'x'))
+
+        for obj in sorted_objects:
+            if obj['type'] == 'tree':
+                objects.append(Tree(x=obj['x'], y=obj['y']))
+        return objects
 
     def get_tile_class(self, tile_type):
         if tile_type == 'grass':
@@ -88,7 +100,7 @@ class Chunk(object):
             render_box[8] = get_tile_type(tile_x+1, tile_y+1)
         return render_box
 
-    def render(self, screen, camera_x, camera_y):
+    def render_tiles(self, screen, camera_x, camera_y):
         chunk_x = self.x * CHUNK_SIZE
         chunk_y = self.y * CHUNK_SIZE
 
@@ -128,3 +140,17 @@ class Chunk(object):
                              (chunk_rect[0][0], chunk_rect[0][1]),
                              border_size)
             screen.blit(self.label, (chunk_rect[0][0]+20, chunk_rect[0][1]+20))
+
+    def render_objects(self, screen, camera_x, camera_y, player=None):
+        chunk_x = self.x * CHUNK_SIZE
+        chunk_y = self.y * CHUNK_SIZE
+
+        player_rendered = player is None
+        for i in xrange(len(self.objects)):
+            if not player_rendered:
+                if player.y <= self.objects[i].y:
+                    player.draw(camera_x, camera_y)
+                    player_rendered = True
+            self.objects[i].draw(screen, chunk_x, chunk_y, camera_x, camera_y)
+        if not player_rendered:
+            player.draw(camera_x, camera_y)
