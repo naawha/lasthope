@@ -60,7 +60,12 @@ class Chunk(object):
 
         for obj in sorted_objects:
             if obj['type'] == 'tree':
-                objects.append(Tree(x=obj['x'], y=obj['y']))
+                objects.append(Tree(
+                    x=obj['x'],
+                    y=obj['y'],
+                    chunk_x=obj['chunk_x'],
+                    chunk_y=obj['chunk_y']
+                ))
         return objects
 
     def get_tile_class(self, tile_type):
@@ -151,6 +156,6 @@ class Chunk(object):
                 if player.y <= self.objects[i].y:
                     player.draw(camera_x, camera_y)
                     player_rendered = True
-            self.objects[i].draw(screen, chunk_x, chunk_y, camera_x, camera_y)
+            self.objects[i].draw(screen, camera_x, camera_y)
         if not player_rendered:
             player.draw(camera_x, camera_y)

@@ -8,6 +8,7 @@ class Tile(object):
     def __init__(self, render_box):
         self.render_box = render_box
         self.image = self.get_image()
+        self.rect = None
 
     def compare_matrix(self, matrix):
         for i in xrange(len(matrix)):
@@ -20,15 +21,17 @@ class Tile(object):
         return True
 
     def draw(self, screen, x, y, chunk_x, chunk_y, camera_x, camera_y):
+        new_rect = None
         image = self.image
         if type(image) is list:
             for i in image:
-                screen.blit(i, (
+                new_rect = screen.blit(i, (
                     chunk_x * TILE_SIZE + x * TILE_SIZE - camera_x,
                     chunk_y * TILE_SIZE + y * TILE_SIZE - camera_y
                 ))
         else:
-            screen.blit(image, (
+            new_rect = screen.blit(image, (
                 chunk_x * TILE_SIZE + x * TILE_SIZE - camera_x,
                 chunk_y * TILE_SIZE + y * TILE_SIZE - camera_y
             ))
+        self.rect = new_rect

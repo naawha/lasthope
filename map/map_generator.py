@@ -29,7 +29,6 @@ def get_tile(value):
 
 
 def make_img(x, y, array):
-    print x, y
     img = Image.new("RGB", (CHUNK_SIZE, CHUNK_SIZE))
     draw = ImageDraw.Draw(img)
     i = j = 0

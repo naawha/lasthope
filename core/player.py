@@ -12,7 +12,7 @@ PLAYER_MAX_DIVE = 16
 PLAYER_SRITE_OFFSET_X = 0
 PLAYER_SRITE_OFFSET_Y = 5
 
-SPEED = 1
+SPEED = 3
 ANIMATION_DELAY = 100
 RUN_MULTIPLIER = 2.0
 
@@ -122,7 +122,7 @@ class Player(object):
         if DEBUG:
             myfont = pygame.font.SysFont("monospace", 15)
             label = myfont.render('(%s:%s)' % (self.x, self.y), 1, (0, 0, 0))
-            self.screen.blit(label, (x, y))
+            self.screen.blit(label, (self.x, self.y))
 
     def serialize(self):
         return {

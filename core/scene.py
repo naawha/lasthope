@@ -170,7 +170,8 @@ class MapScene(AbstractScene):
 
         self.player.direction = direction
         movement = self.player.get_movement(direction, run)
-        movement, water_dive = self.map.filter_movement(movement, self.player.x, self.player.y)
+        movement = self.map.filter_obj_movement(movement, self.player.x, self.player.y, self.x, self.y)
+        movement, water_dive = self.map.filter_movement(movement, self.player.x, self.player.y, self.x, self.y)
 
         camera_movement = [0, 0]
 

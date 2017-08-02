@@ -1,7 +1,9 @@
 # -*- coding:utf-8 -*-
+import random
 from chunk import Chunk
 from tinydb import TinyDB, Query
 from settings import CHUNK_SIZE, TILE_SIZE
+from tiles import GrassTile
 
 CHUNK_PX_SIZE = CHUNK_SIZE * TILE_SIZE
 
@@ -63,13 +65,22 @@ class Map(object):
         return Chunk(x, y, self.seed, objects)
 
     def generate_objects(self, x, y):
-        return [{
-            'type': 'tree',
-            'chunk_x': x,
-            'chunk_y': y,
-            'x': 300,
-            'y': 300
-        }]
+        temp_chunk = Chunk(x, y, self.seed, [])
+        trees = []
+        trees_count = 20
+        for i in range(trees_count):
+            obj_x = random.randint(0, CHUNK_PX_SIZE)
+            obj_y = random.randint(0, CHUNK_PX_SIZE)
+            if isinstance(temp_chunk.map[(obj_y/32)*CHUNK_SIZE+obj_x/32], GrassTile):
+                trees.append({
+                    'type': 'tree',
+                    'chunk_x': x,
+                    'chunk_y': y,
+                    'x': obj_x,
+                    'y': obj_y
+                })
+
+        return trees
 
     def update(self, x, y):
         chunk_x, chunk_y = self.get_chunk_coords(x, y)
@@ -88,22 +99,41 @@ class Map(object):
             else:
                 self.chunks[i].render_objects(self.screen, camera_x, camera_y)
 
-    def filter_movement_new(self, movement, player_x, player_y):
-        filtered_movement = [0, 0]
-        current_chunk = self.chunks[4]
-        player_chunk_x = player_x - current_chunk.x * CHUNK_PX_SIZE
-        player_chunk_y = player_y - current_chunk.y * CHUNK_PX_SIZE
+    def filter_movement_new(self, movement, player_x, player_y, camera_x, camera_y):
+        filtered_movement = [movement[0], movement[1]]
+        water_dive = 0
+        _new_player = [player_x-camera_x+movement[0], player_y-camera_y+movement[1]]
+        box = self.get_collision_box((player_x, player_y))
 
-        tile_chunk_x = int(player_chunk_x/TILE_SIZE)*TILE_SIZE
-        tile_chunk_y = int(player_chunk_y/TILE_SIZE)*TILE_SIZE
+        if not box[1].is_walkable and box[1].rect.collidepoint(*_new_player):
+            filtered_movement[1] = movement[1] - (_new_player[1] - box[1].rect.bottom - 1)
 
-        # индексы тайла, на котором находится игрок, относительно чанка
-        tile_chunk_index_x = int(player_chunk_x/TILE_SIZE)
-        tile_chunk_index_y = int(player_chunk_y/TILE_SIZE)
+        if not box[7].is_walkable and box[7].rect.collidepoint(*_new_player):
+            filtered_movement[1] = movement[1] - (_new_player[1] - box[7].rect.top + 1)
 
+        if not box[3].is_walkable and box[3].rect.collidepoint(*_new_player):
+            filtered_movement[0] = movement[0] - (_new_player[0] - box[3].rect.right - 1)
 
+        if not box[5].is_walkable and box[5].rect.collidepoint(*_new_player):
+            filtered_movement[0] = movement[0] - (_new_player[0] - box[5].rect.left + 1)
 
-    def filter_movement(self, movement, player_x, player_y):
+        return filtered_movement, water_dive
+
+    def box_collision(self, box, player):
+        if box[1] > player[0] > box[3] and box[0] < player[1] < box[2]:
+            return True
+        return False
+
+    def filter_obj_movement(self, movement, player_x, player_y, camera_x, camera_y):
+        filtered_movement = [movement[0], movement[1]]
+        _new_player = [player_x+movement[0], player_y+movement[1]]
+        for obj in self.chunks[4].objects:
+            box = obj.get_collision_box()
+            if box is not None and self.box_collision(box, _new_player):
+                return [0, 0]
+        return filtered_movement
+
+    def filter_movement(self, movement, player_x, player_y, camera_x, camera_y):
         filtered_movement = [0, 0]
         water_dive = 0
 
@@ -157,6 +187,7 @@ class Map(object):
             player_tile_x = (player_x + filtered_movement[0])%TILE_SIZE
             player_tile_y = (player_y + filtered_movement[1])%TILE_SIZE
             water_dive = result_tile.get_dive((player_tile_x, player_tile_y))
+
         return filtered_movement, water_dive
 
     def get_corner_tile(self, collision_box, movement):
