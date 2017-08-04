@@ -1,0 +1,7 @@
+olefile==0.44
+opensimplex==0.2
+Pillow==4.1.1
+py2exe-py2==0.6.9
+pygame==1.9.3
+Pyganim==0.9.2
+tinydb==3.3.1

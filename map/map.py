@@ -71,14 +71,17 @@ class Map(object):
         for i in range(trees_count):
             obj_x = random.randint(0, CHUNK_PX_SIZE)
             obj_y = random.randint(0, CHUNK_PX_SIZE)
-            if isinstance(temp_chunk.map[(obj_y/32)*CHUNK_SIZE+obj_x/32], GrassTile):
-                trees.append({
-                    'type': 'tree',
-                    'chunk_x': x,
-                    'chunk_y': y,
-                    'x': obj_x,
-                    'y': obj_y
-                })
+            try:
+                if isinstance(temp_chunk.map[(obj_y/32)*CHUNK_SIZE+obj_x/32], GrassTile):
+                    trees.append({
+                        'type': 'tree',
+                        'chunk_x': x,
+                        'chunk_y': y,
+                        'x': obj_x,
+                        'y': obj_y
+                    })
+            except:
+                pass
 
         return trees
 
