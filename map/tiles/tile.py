@@ -1,4 +1,4 @@
-from settings import TILE_SIZE
+from settings import TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class Tile(object):
@@ -24,6 +24,13 @@ class Tile(object):
         return True
 
     def draw(self, screen, x, y, chunk_x, chunk_y, camera_x, camera_y):
+        tile_relative_x = chunk_x * TILE_SIZE + x * TILE_SIZE - camera_x
+        tile_relative_y = chunk_y * TILE_SIZE + y * TILE_SIZE - camera_y
+        if tile_relative_x + TILE_SIZE < 0 or tile_relative_y + TILE_SIZE < 0:
+            return
+        if tile_relative_x > SCREEN_WIDTH or tile_relative_y > SCREEN_HEIGHT:
+            return
+
         new_rect = None
         image = self.image
         if type(image) is list:
