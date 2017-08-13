@@ -118,7 +118,7 @@ class Player(object):
         direction = self.get_image_direction()
         # self.map.update(int(self.x), int(self.y))
 
-        self.character.render((self.x - camera_x, self.y - camera_y), self.idle, direction, dive_offset)
+        self.character.render(self.screen, (self.x - camera_x, self.y - camera_y), self.idle, direction, dive_offset)
         if DEBUG:
             myfont = pygame.font.SysFont("monospace", 15)
             label = myfont.render('(%s:%s)' % (self.x, self.y), 1, (0, 0, 0))

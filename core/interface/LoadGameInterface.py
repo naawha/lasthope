@@ -11,15 +11,15 @@ class LoadGameInterface(Menu):
     default = None
     return_on_select = False
 
-    def __init__(self, screen, game):
+    def __init__(self, screen, manager):
         self.screen = screen
-        self.game = game
+        self.manager = manager
         self.font = pygame.font.Font('src/fonts/runic.ttf', 40)
         self.items = self.get_savegames()
         super(LoadGameInterface, self).__init__(screen)
 
     def get_savegames(self):
-        return self.game.get_savegames()
+        return self.manager.get_savegames()
 
     def get_label(self, value, color):
         if not hasattr(self, '_values_cache'):
@@ -35,14 +35,14 @@ class LoadGameInterface(Menu):
         return self._values_cache[key]
 
     def select_item(self, i):
-        self.game.load_game(self.items[i]['file'].split('.')[0])
+        self.manager.load_game(self.items[i])
 
     def render_item(self, i, active, left, top):
-        self.items[i]['character'].render((left+self.settings[0]-50, top+75))
-        self.items[i]['character'].render((left+self.settings[0]-50, top+75))
+        self.items[i].character.render(self.screen, (left+self.settings[0]-50, top+75))
+        self.items[i].character.render(self.screen, (left+self.settings[0]-50, top+75))
 
         key = 'active' if active else 'normal'
-        value = datetime.datetime.strptime(self.items[i]['file'].split('.')[0], '%Y%m%d%H%M%S').strftime('%d-%m-%Y')
+        value = datetime.datetime.strptime(self.items[i].name, '%Y%m%d%H%M%S').strftime('%d-%m-%Y')
 
         self.screen.blit(self.get_label(u' Начало:'+value, key), (left+50, top+10))
         self.screen.blit(self.get_label(u'Сыграно:'+value, key), (left+50, top+60))

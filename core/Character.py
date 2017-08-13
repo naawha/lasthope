@@ -31,8 +31,7 @@ def refresh_sprites_after(func):
 
 
 class Character(object):
-    def __init__(self, screen, sex='male', skin='light', hair_color='black', hair_style='messy1', dress=None):
-        self.screen = screen
+    def __init__(self, sex='male', skin='light', hair_color='black', hair_style='messy1', dress=None):
         self._sex = self.validate_sex(sex)
         self._skin = self.validate_skin(skin)
         self._hair_color = self.validate_hair_color(hair_color)
@@ -204,14 +203,14 @@ class Character(object):
             image_layers.append(images)
         return image_layers
 
-    def render(self, coords, idle=True, direction='bottom', dive_offset=0):
+    def render(self, screen, coords, idle=True, direction='bottom', dive_offset=0):
         player_sprite_coords = [
             coords[0]-PLAYER_WIDTH/2+PLAYER_SRITE_OFFSET_X,
             coords[1]-PLAYER_HEIGHT+PLAYER_SRITE_OFFSET_Y+dive_offset
         ]
         if idle:
             for layer in self._images:
-                self.screen.blit(layer[direction]['normal'], player_sprite_coords, (0, 0, PLAYER_WIDTH, PLAYER_HEIGHT-dive_offset))
+                screen.blit(layer[direction]['normal'], player_sprite_coords, (0, 0, PLAYER_WIDTH, PLAYER_HEIGHT-dive_offset))
         else:
             for layer in self._animations:
-                layer['walk'][direction].blit(self.screen, player_sprite_coords, (0, 0, PLAYER_WIDTH, PLAYER_HEIGHT-dive_offset))
+                layer['walk'][direction].blit(screen, player_sprite_coords, (0, 0, PLAYER_WIDTH, PLAYER_HEIGHT-dive_offset))

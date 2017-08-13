@@ -12,6 +12,9 @@ class Menu(object):
     items = []
     return_on_select = True
 
+    def select_item(self, i):
+        raise NotImplementedError
+
     def __init__(self, screen):
         self.settings = MENU_TYPES[self.menu_type]
         self.screen = screen

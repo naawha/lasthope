@@ -1,7 +1,7 @@
 # -*- coding: utf=8 -*-
 import pygame
 
-from core.character import Character
+from core.Character import Character
 from core.spritesheet import sprite_sheet
 
 
@@ -11,11 +11,11 @@ class NewGameInterface(object):
     PADDING_LEFT = 30
     PADDING_TOP = 64
 
-    def __init__(self, screen, game):
+    def __init__(self, screen, manager):
         self.direction = 'bottom'
         self.screen = screen
-        self.game = game
-        self.character = Character(screen)
+        self.manager = manager
+        self.character = Character()
         self.images = self.get_images()
 
         self.font = pygame.font.Font('src/fonts/runic.ttf', 42)
@@ -50,7 +50,7 @@ class NewGameInterface(object):
         margin_top = 100
         margin_left = 220
 
-        self.character.render((
+        self.character.render(self.screen, (
             self.MARGIN_LEFT + margin_left + 50,
             self.MARGIN_TOP + margin_top + 50
         ), direction=self.direction)
@@ -79,6 +79,8 @@ class NewGameInterface(object):
         male_coords = (offset_left, offset_top)
         female_coords = (offset_left + 35, offset_top)
 
+        male_img = None
+        female_img = None
         if self.character.sex == 'male':
             male_img = self.images['sex'][1]
             female_img = self.images['sex'][2]
@@ -130,7 +132,7 @@ class NewGameInterface(object):
         self.screen.blit(self.images['scroll_giant'][2], (self.MARGIN_LEFT, self.MARGIN_TOP+SCROLL_SPRITE_HEIGHT*(size+1)))
 
     def go_next(self):
-        self.game.create_game(self.character)
+        self.manager.create_game(self.character)
 
     def render_continue_button(self):
         button = self.screen.blit(self.images['buttons'][0], (

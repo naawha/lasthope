@@ -9,9 +9,9 @@ CHUNK_PX_SIZE = CHUNK_SIZE * TILE_SIZE
 
 
 class Map(object):
-    def __init__(self, screen, game, x, y, seed):
+    def __init__(self, screen, savegame, x, y, seed):
         self.screen = screen
-        self.game = game
+        self.savegame = savegame
         self.seed = seed
         self.chunk_x, self.chunk_y = self.get_chunk_coords(x, y)
         self.chunks = self.get_chunks()
@@ -34,34 +34,13 @@ class Map(object):
                     chunks.append(self.load_chunk(x, y))
         return chunks
 
-    def insert_objects(self, object_list):
-        table = self.game.save.table('objects')
-        table.insert_multiple(object_list)
-
-    def has_chunk(self, x, y):
-        table = self.game.save.table('chunks')
-        q = Query()
-        return bool(table.search((q.x == x) & (q.y == y)))
-
-    def get_chunk_objects(self, x, y):
-        table = self.game.save.table('objects')
-        q = Query()
-        return table.search((q.chunk_x == x) & (q.chunk_y == y))
-
-    def insert_chunk(self, x, y):
-        table = self.game.save.table('chunks')
-        table.insert({
-            'x': x,
-            'y': y
-        })
-
     def load_chunk(self, x, y):
-        if self.has_chunk(x, y):
-            objects = self.get_chunk_objects(x, y)
+        if self.savegame.has_chunk(x, y):
+            objects = self.savegame.get_chunk_objects(x, y)
         else:
-            self.insert_chunk(x, y)
+            self.savegame.insert_chunk(x, y)
             objects = self.generate_objects(x, y)
-            self.insert_objects(objects)
+            self.savegame.insert_objects(objects)
         return Chunk(x, y, self.seed, objects)
 
     def generate_objects(self, x, y):

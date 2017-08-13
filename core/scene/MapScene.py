@@ -1,104 +1,30 @@
 # -*- coding:utf-8 -*-
-
 import pygame
-from tinydb import Query
 
-from core.player import Player
-from map import Map
-from interface import MainMenu, PauseMenu, NewGameInterface, LoadGameInterface
 from settings import SCREEN_HEIGHT, SCREEN_WIDTH, CAMERA_OFFSET
-
-
-class AbstractScene(object):
-    def __init__(self, screen, game):
-        self.screen = screen
-        self.game = game
-        self.interface = self.get_interface()
-
-    def process_input(self, pressed, events):
-        pass
-
-    def get_interface(self):
-        return None
-
-    def render(self):
-        self.screen.fill((0, 0, 0))
-        self.interface.render()
-
-
-class SubMenuMixin(object):
-    def process_input(self, pressed, events):
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                self.interface.click(x, y)
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.game.back_to_menu()
-
-
-class MenuScene(AbstractScene):
-    def __init__(self, screen, game):
-        super(MenuScene, self).__init__(screen, game)
-        self.menu = MainMenu(self.get_menu_items(), screen)
-
-    def get_menu_items(self):
-        items = [('newgame', u'Новая игра')]
-        if self.has_savegames():
-            items.append(('loadgame', u'Загрузить'))
-        items.append(('settings', u'Настройки'))
-        items.append(('quit', u'Выход'))
-
-        return items
-
-    def has_savegames(self):
-        return bool(self.game.get_savegames())
-
-    def apply_action(self, key):
-        if key == 'newgame':
-            self.game.show_new_game()
-        if key == 'loadgame':
-            self.game.show_load_game()
-        if key == 'quit':
-            self.game.end()
-
-    def process_input(self, pressed, events):
-        for event in events:
-            selected = self.menu.process_event(event)
-            if selected:
-                self.apply_action(selected)
-
-    def render(self):
-        self.screen.fill((0, 0, 0))
-        self.menu.render()
-
-
-class NewGameScene(SubMenuMixin, AbstractScene):
-    def get_interface(self):
-        return NewGameInterface(self.screen, self.game)
-
-
-class LoadGameScene(SubMenuMixin, AbstractScene):
-    def get_interface(self):
-        return LoadGameInterface(self.screen, self.game)
-
-    def process_input(self, pressed, events):
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.game.back_to_menu()
-            self.interface.process_event(event)
+from AbstractScene import AbstractScene
+from core.interface import PauseMenu
+from map import Map
+from core.Player import Player
 
 
 class MapScene(AbstractScene):
-    def __init__(self, game, screen, player, map):
-        super(MapScene, self).__init__(screen, game)
-        self.player = player
-        self.map = map
+    def __init__(self, manager, screen, savegame):
+        super(MapScene, self).__init__(screen, manager)
+        self.savegame = savegame
+        self.player = self.load_player()
+        self.map = self.load_map()
         self.game_menu = None
 
         self.x = self.y = None
         self.center_camera()
+
+    def load_player(self):
+        player = self.savegame.get_player_data()
+        return Player(self.screen, self.savegame.character, **player)
+
+    def load_map(self):
+        return Map(self.screen, self.savegame, self.player.x, self.player.y, seed=self.savegame.seed)
 
     def center_camera(self):
         self.x = self.player.x - SCREEN_WIDTH/2
@@ -136,14 +62,14 @@ class MapScene(AbstractScene):
         if event == 'continue':
             self.close_menu()
         if event == 'save':
-            self.game.save_game()
+            self.manager.save_game()
             self.close_menu()
         if event == 'settings':
             self.close_menu()
         if event == 'main_menu':
-            self.game.back_to_menu()
+            self.manager.back_to_menu()
         if event == 'exit':
-            self.game.end()
+            self.manager.end()
 
     def process_input(self, pressed, events):
         if self.game_menu:
