@@ -1,11 +1,45 @@
 # -*- coding:utf-8 -*-
 import random
+import threading
+
 from chunk import Chunk
 from tinydb import TinyDB, Query
 from settings import CHUNK_SIZE, TILE_SIZE
 from tiles import GrassTile
 
 CHUNK_PX_SIZE = CHUNK_SIZE * TILE_SIZE
+
+
+def load_chunk(x, y, map, i):
+    if map.savegame.has_chunk(x, y):
+        objects = map.savegame.get_chunk_objects(x, y)
+    else:
+        map.savegame.insert_chunk(x, y)
+        objects = generate_objects(map.seed, x, y)
+        map.savegame.insert_objects(objects)
+    chunk = Chunk(x, y, map.savegame.seed, objects)
+    map.chunks[i] = chunk
+
+
+def generate_objects(seed, x, y):
+    temp_chunk = Chunk(x, y, seed, [])
+    trees = []
+    trees_count = 20
+    for i in range(trees_count):
+        obj_x = random.randint(0, CHUNK_PX_SIZE)
+        obj_y = random.randint(0, CHUNK_PX_SIZE)
+        try:
+            if isinstance(temp_chunk.map[(obj_y/32)*CHUNK_SIZE+obj_x/32], GrassTile):
+                trees.append({
+                    'type': 'tree',
+                    'chunk_x': x,
+                    'chunk_y': y,
+                    'x': obj_x,
+                    'y': obj_y
+                })
+        except:
+            pass
+    return trees
 
 
 class Map(object):
@@ -19,19 +53,27 @@ class Map(object):
     def get_chunk_coords(self, x, y):
         return int(x) / CHUNK_PX_SIZE, int(y) / CHUNK_PX_SIZE
 
+    def load_chunk_async(self, x, y, i):
+        thr = threading.Thread(target=load_chunk, args=(x, y, self, i), kwargs={})
+        thr.start()
+
     def get_chunks(self):
         chunks = []
+        i = 0
         for y in range(self.chunk_y-1, self.chunk_y+2):
             for x in range(self.chunk_x-1, self.chunk_x+2):
                 if hasattr(self, 'chunks'):
-                    for chunk in self.chunks:
+                    for chunk in filter(bool, self.chunks):
                         if chunk.x == x and chunk.y == y:
                             chunks.append(chunk)
                             break
                     else:
-                        chunks.append(self.load_chunk(x, y))
+                        chunks.append(None)
+                        self.load_chunk_async(x, y, i)
+                        # chunks.append(self.load_chunk(x, y))
                 else:
                     chunks.append(self.load_chunk(x, y))
+                i += 1
         return chunks
 
     def load_chunk(self, x, y):
@@ -73,13 +115,15 @@ class Map(object):
 
     def render(self, camera_x, camera_y, player):
         for i in range(len(self.chunks)):
-            self.chunks[i].render_tiles(self.screen, camera_x, camera_y)
+            if self.chunks[i] is not None:
+                self.chunks[i].render_tiles(self.screen, camera_x, camera_y)
 
         for i in range(len(self.chunks)):
-            if i == 4:
-                self.chunks[i].render_objects(self.screen, camera_x, camera_y, player)
-            else:
-                self.chunks[i].render_objects(self.screen, camera_x, camera_y)
+            if self.chunks[i] is not None:
+                if i == 4:
+                    self.chunks[i].render_objects(self.screen, camera_x, camera_y, player)
+                else:
+                    self.chunks[i].render_objects(self.screen, camera_x, camera_y)
 
     def filter_movement_new(self, movement, player_x, player_y, camera_x, camera_y):
         filtered_movement = [movement[0], movement[1]]

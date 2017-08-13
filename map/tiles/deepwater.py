@@ -10,4 +10,4 @@ class DeepWaterTile(Tile):
     tile_type = 'deepwater'
 
     def get_image(self):
-        return WaterTileLoader.get_sprite('plain_special_1')
+        return WaterTileLoader.get_sprite('plain')

@@ -20,8 +20,8 @@ class MapScene(AbstractScene):
         self.center_camera()
 
     def load_player(self):
-        player = self.savegame.get_player_data()
-        return Player(self.screen, self.savegame.character, **player)
+        player_data = self.savegame.player_data
+        return Player(self.screen, self.savegame.character, **player_data)
 
     def load_map(self):
         return Map(self.screen, self.savegame, self.player.x, self.player.y, seed=self.savegame.seed)
