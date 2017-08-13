@@ -4,17 +4,17 @@ from opensimplex import OpenSimplex
 from PIL import Image, ImageDraw
 
 from settings import CHUNK_SIZE
-from tiles import SandTile, WaterTile, GrassTile
+
 
 def get_color(value):
     if value < 25:
-        return (0, 21, 255)
+        return 0, 21, 255
     elif value < 35:
-        return (255, 234, 0)
+        return 255, 234, 0
     elif value < 70:
-        return (0, 171, 34)
+        return 0, 171, 34
     else:
-        return (8, 120, 8)
+        return 8, 120, 8
 
 
 def get_tile(value):

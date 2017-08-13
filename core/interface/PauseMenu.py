@@ -8,8 +8,15 @@ class PauseMenu(Menu):
     OFFSET_TOP = 100
     OFFSET_LEFT = 100
 
-    def __init__(self, items, screen):
-        self.items = self.prepare_items(items)
+    def __init__(self, screen):
+        self._items = [
+            ('continue', u'Продолжить'),
+            ('save', u'Сохранить'),
+            ('settings', u'Настройки'),
+            ('main_menu', u'В меню'),
+            ('exit', u'Выйти')
+        ]
+        self.items = self.prepare_items(self._items)
         super(PauseMenu, self).__init__(screen)
 
     def prepare_items(self, items):

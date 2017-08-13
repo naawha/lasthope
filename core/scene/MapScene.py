@@ -31,16 +31,23 @@ class MapScene(AbstractScene):
         self.y = self.player.y - SCREEN_HEIGHT/2
 
     def open_menu(self):
-        self.game_menu = PauseMenu([
-            ('continue', u'Продолжить'),
-            ('save', u'Сохранить'),
-            ('settings', u'Настройки'),
-            ('main_menu', u'В меню'),
-            ('exit', u'Выйти')
-        ], self.screen)
+        self.game_menu = PauseMenu(self.screen)
 
     def close_menu(self):
         self.game_menu = None
+
+    def pause_menu_event(self, event):
+        if event == 'continue':
+            self.close_menu()
+        if event == 'save':
+            self.manager.save_game()
+            self.close_menu()
+        if event == 'settings':
+            self.close_menu()
+        if event == 'main_menu':
+            self.manager.back_to_menu()
+        if event == 'exit':
+            self.manager.end()
 
     @staticmethod
     def decide_move_direction(pressed):
@@ -57,19 +64,6 @@ class MapScene(AbstractScene):
             move_keys['left'] = move_keys['right'] = False
         direction = [key for key, value in move_keys.items() if value]
         return direction, run
-
-    def pause_menu_event(self, event):
-        if event == 'continue':
-            self.close_menu()
-        if event == 'save':
-            self.manager.save_game()
-            self.close_menu()
-        if event == 'settings':
-            self.close_menu()
-        if event == 'main_menu':
-            self.manager.back_to_menu()
-        if event == 'exit':
-            self.manager.end()
 
     def process_input(self, pressed, events):
         if self.game_menu:
@@ -124,7 +118,6 @@ class MapScene(AbstractScene):
                     if screen_offset_gap < -movement[1]:
                         camera_movement[1] = -(movement[1] - screen_offset_gap)
 
-            # print camera_movement
             self.player.apply_movement(movement, run, water_dive)
             self.apply_movement(camera_movement)
 

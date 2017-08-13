@@ -5,6 +5,9 @@ class Tile(object):
     tile_type = None
     acceptable_tile_types = []
 
+    def get_image(self):
+        raise NotImplementedError
+
     def __init__(self, render_box):
         self.render_box = render_box
         self.image = self.get_image()

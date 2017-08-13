@@ -3,6 +3,7 @@ import pygame
 from settings import MENU_TYPES
 from core.spritesheet import sprite_sheet
 
+
 class Menu(object):
     OFFSET_TOP = 0
     OFFSET_LEFT = 0
